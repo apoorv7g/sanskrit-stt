@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Model weights and caches (downloaded at runtime, never committed)
+models/
+*.onnx
+*.onnx_data
+*.nemo
+.cache/
+
+# Audio: only the curated sample is tracked
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.oga
+*.m4a
+*.webm
+!samples/*.wav
+!samples/*.ogg
+
+# Outputs
+outputs/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
