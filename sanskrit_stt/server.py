@@ -1,22 +1,24 @@
-"""HTTP API for the (future) UI: POST audio, get Devanagari text back."""
+"""Web app: serves the recorder UI and the transcription API from one process."""
 
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.staticfiles import StaticFiles
 
 from sanskrit_stt import __version__
 from sanskrit_stt.audio import AudioError
-from sanskrit_stt.config import Settings
 from sanskrit_stt.transcriber import SanskritTranscriber
 
-MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+WEB_DIR = Path(__file__).parent / "web"
+# The UI sends <=25 s WAV chunks (~0.8 MB); this leaves room for uploaded recordings via the API.
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
 def create_app(transcriber: SanskritTranscriber | None = None, *, warmup: bool = True) -> FastAPI:
-    stt = transcriber or SanskritTranscriber(Settings())
+    stt = transcriber or SanskritTranscriber()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -25,31 +27,23 @@ def create_app(transcriber: SanskritTranscriber | None = None, *, warmup: bool =
         yield
 
     app = FastAPI(title="Sanskrit STT", version=__version__, lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-    @app.get("/health")
-    def health() -> dict[str, object]:
-        return {
-            "status": "ok",
-            "model": stt.settings.model,
-            "quantization": stt.settings.quantization or "fp32",
-        }
+    @app.get("/api/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok", "model": stt.settings.model}
 
     # Sync handler: FastAPI runs it in a worker thread, keeping the event loop free during inference.
-    @app.post("/transcribe")
-    def transcribe(
-        file: UploadFile = File(..., description="Any audio format ffmpeg can decode"),
-        keep_accents: bool = Query(False, description="Keep Vedic svara marks in the output"),
-    ) -> dict[str, object]:
+    @app.post("/api/transcribe")
+    def transcribe(file: UploadFile = File(..., description="Any audio format ffmpeg can decode")) -> dict[str, object]:
         data = file.file.read(MAX_UPLOAD_BYTES + 1)
         if not data:
             raise HTTPException(400, "empty upload")
         if len(data) > MAX_UPLOAD_BYTES:
             raise HTTPException(413, f"file larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB")
         try:
-            result = stt.transcribe(data, keep_accents=keep_accents)
+            return stt.transcribe(data).to_dict()
         except AudioError as exc:
             raise HTTPException(422, str(exc)) from exc
-        return {"filename": file.filename, **result.to_dict()}
 
+    app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
     return app

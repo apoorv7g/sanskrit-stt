@@ -4,22 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sanskrit-stt"
-version = "0.1.0"
-description = "Sanskrit speech-to-text (Devanagari output) using AI4Bharat IndicConformer via ONNX Runtime"
+version = "0.2.0"
+description = "Speak Sanskrit, read Devanagari: a web app on AI4Bharat IndicConformer via ONNX Runtime"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
     "onnx-asr[cpu,hub]>=0.12",
     "numpy>=1.26",
-]
-
-[project.optional-dependencies]
-server = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "python-multipart>=0.0.9",
 ]
+
+[project.optional-dependencies]
 dev = [
     "pytest>=8",
     "httpx>=0.27",
@@ -30,6 +28,9 @@ sanskrit-stt = "sanskrit_stt.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["sanskrit_stt*"]
+
+[tool.setuptools.package-data]
+sanskrit_stt = ["web/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

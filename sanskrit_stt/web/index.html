@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vāk — Sanskrit Speech</title>
+  <meta name="description" content="Speak Sanskrit, read it in Devanagari.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try { const t = localStorage.getItem("vak-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">
+      <!-- <span class="brand-dev" lang="sa">वाक्</span>
+      <span class="brand-en">Vāk</span> -->
+    </div>
+    <button id="theme" class="icon-btn" type="button" aria-label="Toggle light or dark theme">
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Sanskrit speech to Devanagari</p>
+      <h1>Speak, and let the <em>word</em> be written.</h1>
+    </section>
+
+    <section class="recorder">
+      <button id="mic" class="mic" type="button" aria-pressed="false" aria-label="Start listening">
+        <span class="halo" aria-hidden="true"></span>
+        <span class="ring" aria-hidden="true"></span>
+        <svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
+        <svg class="stop-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>
+      </button>
+      <p id="status" class="status" role="status" aria-live="polite">Tap to begin</p>
+      <p id="timer" class="timer" aria-hidden="true">00:00</p>
+    </section>
+
+    <section class="folio" aria-label="Transcript">
+      <div class="folio-head">
+        <span class="rule"></span><span class="ornament" lang="sa">॥</span><span class="rule"></span>
+      </div>
+      <div id="transcript" class="transcript" lang="sa">
+        <p class="placeholder">Your words will appear here, verse by verse.</p>
+      </div>
+      <div class="folio-foot">
+        <button id="copy" class="text-btn" type="button" disabled>Copy</button>
+        <span class="dot" aria-hidden="true">·</span>
+        <button id="clear" class="text-btn" type="button" disabled>Clear</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="colophon">
+    Made by <a href="https://github.com/apoorv7g" target="_blank" rel="noopener noreferrer">apoorv7g</a>
+  </footer>
+
+  <div id="toast" class="toast" role="alert" hidden></div>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

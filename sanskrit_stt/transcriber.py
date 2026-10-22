@@ -49,17 +49,12 @@ class SanskritTranscriber:
             if self._model is None:
                 model = self.settings.model
                 path = model if Path(model).is_dir() else None
-                self._model = onnx_asr.load_model(
-                    "nemo-conformer-ctc" if path else model,
-                    path,
-                    quantization=self.settings.quantization,
-                )
+                self._model = onnx_asr.load_model("nemo-conformer-ctc" if path else model, path)
                 self._vad_model = self._model.with_vad(
                     onnx_asr.load_vad("silero"),
-                    threshold=self.settings.vad_threshold,
                     max_speech_duration_s=self.settings.max_segment_s,
                     min_silence_duration_ms=self.settings.min_silence_ms,
-                    speech_pad_ms=self.settings.speech_pad_ms,
+                    speech_pad_ms=200,
                 )
         return self
 
@@ -68,26 +63,20 @@ class SanskritTranscriber:
         self.load()
         self._model.recognize(np.zeros(SAMPLE_RATE, dtype=np.float32), sample_rate=SAMPLE_RATE)
 
-    def transcribe(
-        self,
-        source: str | Path | bytes | npt.NDArray[np.float32],
-        *,
-        keep_accents: bool | None = None,
-    ) -> Transcript:
+    def transcribe(self, source: str | Path | bytes | npt.NDArray[np.float32]) -> Transcript:
         """Transcribe a file path, raw file bytes, or a 16 kHz mono float32 array."""
         self.load()
-        keep = self.settings.keep_accents if keep_accents is None else keep_accents
         waveform = source if isinstance(source, np.ndarray) else load_audio(source)
         waveform = np.ascontiguousarray(waveform, dtype=np.float32)
         total = duration_s(waveform)
 
         started = time.perf_counter()
         if total <= self.settings.max_segment_s:
-            text = normalize(self._model.recognize(waveform, sample_rate=SAMPLE_RATE), keep_accents=keep)
+            text = normalize(self._model.recognize(waveform, sample_rate=SAMPLE_RATE))
             segments = [Segment(0.0, round(total, 2), text)] if text else []
         else:
             segments = [
-                Segment(round(s.start, 2), round(s.end, 2), normalize(s.text, keep_accents=keep))
+                Segment(round(s.start, 2), round(s.end, 2), normalize(s.text))
                 for s in self._vad_model.recognize(waveform, sample_rate=SAMPLE_RATE)
             ]
             segments = [s for s in segments if s.text]

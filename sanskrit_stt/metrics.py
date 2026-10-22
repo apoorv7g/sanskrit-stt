@@ -1,4 +1,4 @@
-"""Word and character error rates (no external dependencies)."""
+"""Character error rate (no external dependencies)."""
 
 from __future__ import annotations
 
@@ -17,17 +17,11 @@ def edit_distance(ref: Sequence[str], hyp: Sequence[str]) -> int:
     return prev[-1]
 
 
-def wer(reference: str, hypothesis: str) -> float:
-    ref = normalize_for_scoring(reference).split()
-    hyp = normalize_for_scoring(hypothesis).split()
-    return edit_distance(ref, hyp) / max(len(ref), 1)
-
-
 def cer(reference: str, hypothesis: str) -> float:
     """Character error rate ignoring spaces.
 
     Sanskrit word boundaries are ambiguous under sandhi (e.g. "चेत्कर्मणस्ते" vs "चेत् कर्मणः ते"),
-    so CER without spaces is the more meaningful number.
+    so word error rate mostly measures spacing; CER without spaces is the meaningful number.
     """
     ref = normalize_for_scoring(reference).replace(" ", "")
     hyp = normalize_for_scoring(hypothesis).replace(" ", "")

@@ -12,27 +12,32 @@ def client(transcriber):
         yield c
 
 
+def test_serves_web_app(client):
+    page = client.get("/")
+    assert page.status_code == 200
+    assert "Tiro+Devanagari+Sanskrit" in page.text
+    for asset in ("app.js", "styles.css", "capture-worklet.js"):
+        assert client.get(f"/{asset}").status_code == 200, asset
+
+
 def test_health(client):
-    body = client.get("/health").json()
-    assert body["status"] == "ok"
-    assert body["quantization"] == "fp32"
+    assert client.get("/api/health").json()["status"] == "ok"
 
 
 def test_transcribe_upload(client, samples):
     with (samples / "gita_3_4.wav").open("rb") as f:
-        resp = client.post("/transcribe", files={"file": ("gita_3_4.wav", f, "audio/wav")})
+        resp = client.post("/api/transcribe", files={"file": ("gita_3_4.wav", f, "audio/wav")})
     assert resp.status_code == 200
     body = resp.json()
-    assert body["filename"] == "gita_3_4.wav"
     assert "समधि" in body["text"]
     assert body["segments"][0]["start"] == 0.0
 
 
 def test_rejects_non_audio(client):
-    resp = client.post("/transcribe", files={"file": ("x.wav", b"not audio", "audio/wav")})
+    resp = client.post("/api/transcribe", files={"file": ("x.wav", b"not audio", "audio/wav")})
     assert resp.status_code == 422
 
 
 def test_rejects_empty(client):
-    resp = client.post("/transcribe", files={"file": ("x.wav", b"", "audio/wav")})
+    resp = client.post("/api/transcribe", files={"file": ("x.wav", b"", "audio/wav")})
     assert resp.status_code == 400
